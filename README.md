@@ -54,24 +54,22 @@ The `ENV` constant refers to a global hash for your entire computer environment.
 
 As you can gather from the initializer code, we're going to need two pieces of information from Facebook in order to get authentication working: the application key and secret that will identify our app to Facebook.
 
-Log in to [the Facebook developer site](https://developers.facebook.com/). In the `My Apps` dropdown menu at the top-right of the page, select `Add a New App`, and a modal should appear. Fill out the requested information and click `Create App ID`. You should now be on the `Product Setup` page — if you are not, look in the sidebar for `+ Add Product` under the `Products` heading. On the `Product Setup` page, click `Get Started` next to `Facebook Login`:
+Log in to [the Facebook developer site](https://developers.facebook.com/). In the `My Apps` dropdown menu at the top-right of the page, select `Add New App`, and a modal should appear. Fill out the requested information and click `Create App ID`. Find `PRODUCTS (+)` in the left sidebar. On the `Add a Product` page, click `Set Up` on the `Facebook Login` option.
 
-![Facebook Login](https://user-images.githubusercontent.com/17556281/27402847-25d8c782-5696-11e7-8fa0-2aaa6602de06.png)
-
-Choose the `Web` option, and enter `https://localhost:3000/` when it prompts you for your `Site URL`. Click `Save`, and then click on `Settings` under the `Facebook Login` heading in the sidebar:
+Choose the `Web` option, and enter `https://localhost:3000/` when it prompts you for your `Site URL`. Click `Save` (but not `Continue`, and then click on `Settings` under the `Facebook Login` heading in the sidebar:
 
 (NOTE: The urls in the two images below should be prefixed with `https://`)
 
 ![Facebook Login Settings](https://user-images.githubusercontent.com/17556281/27403332-0cf83f84-5698-11e7-9e59-acb8ec82a5d2.png)
 
 
-In the `Valid OAuth redirect URIs` field, enter `https://localhost:3000/auth/facebook/callback`, which is the default callback endpoint for the `omniauth-facebook` strategy:
+In the `Valid OAuth Redirect URIs` field, enter `https://localhost:3000/auth/facebook/callback`, which is the default callback endpoint for the `omniauth-facebook` strategy:
 
 ![Valid OAuth redirect URIs](https://user-images.githubusercontent.com/17556281/27404131-f5aea626-569a-11e7-9f76-df563870d81a.png)
 
 (Note: as of March 2018, Facebook requires `https` uris for redirects. Make sure to prepend your `Valid OAuth Redirect URIs` with `https`.)
 
-Click `Save Changes`, and then click on `Dashboard` in the sidebar. Keep the page handy because we'll need those `App ID` and `App Secret` values in a minute, but first...
+Click `Save Changes`, and then click on `Settings` then `Basic` in the sidebar. Keep the page handy because we'll need those `App ID` and `App Secret` values in a minute, but first...
 
 ### `dotenv-rails`
 Instead of setting environment variables directly in our local `ENV` hash, we're going to let an awesome gem handle the hard work for us. `dotenv-rails` is one of the best ways to ensure that environment variables are correctly loaded into the `ENV` hash in a secure manner. Using it requires four steps:
