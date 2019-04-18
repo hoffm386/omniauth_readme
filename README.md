@@ -73,16 +73,16 @@ GOOGLE_SECRET=01ab2345JY67890c123d
 (replacing these dummy keys with your actual credentials)
 
 ### Routing OAuth flow in your application
-We now need to create a link that will initiate the Facebook OAuth process. The standard OmniAuth path is `/auth/:provider`, so, in this case, we'll need a link to `/auth/facebook`. Let's add one to `app/views/welcome/home.html.erb`:
+We now need to create a link that will initiate the Facebook OAuth process. The standard OmniAuth path is `/auth/:provider`, so, in this case, we'll need a link to `/auth/google_oauth2`. Let's add one to `app/views/welcome/home.html.erb`:
 ```erb
-<%= link_to('Log in with Facebook!', '/auth/facebook') %>
+<%= link_to('Log in with Google!', '/auth/google_oauth2') %>
 ```
 
-Next, we're going to need a `User` model and a `SessionsController` to track users who log in via Facebook. The `User` model should have four attributes, all strings: `name`, `email`, `image`, and `uid` (the user's ID on Facebook).
+Next, we're going to need a `User` model and a `SessionsController` to track users who log in via Google. The `User` model should have four attributes, all strings: `name`, `email`, `image`, and `uid` (the user's ID on Google).
 
-To handle user sessions, we need to create a single route, `sessions#create`, which is where Facebook will redirect users in the callback phase of the login process. Add the following to `config/routes.rb`:
+To handle user sessions, we need to create a single route, `sessions#create`, which is where Google will redirect users in the callback phase of the login process. Add the following to `config/routes.rb`:
 ```ruby
-get '/auth/facebook/callback' => 'sessions#create'
+get '/auth/google_oauth2/callback' => 'sessions#create'
 ```
 
 Our `SessionsController` will be pretty simplistic, with a lone action (and a helper method to DRY up our code a bit):
@@ -108,40 +108,33 @@ class SessionsController < ApplicationController
 end
 ```
 
-And, finally, since we're re-rendering the `welcome#home` view upon logging in via Facebook, let's add a control flow to display user data if the user is logged in and the login link otherwise:
+And, finally, since we're re-rendering the `welcome#home` view upon logging in via Google, let's add a control flow to display user data if the user is logged in and the login link otherwise:
 ```erb
 <% if session[:user_id] %>
   <h1><%= @user.name %></h1>
   <h2>Email: <%= @user.email %></h2>
-  <h2>Facebook UID: <%= @user.uid %></h2>
+  <h2>Google UID: <%= @user.uid %></h2>
   <img src="<%= @user.image %>">
 <% else %>
-  <%= link_to('Log in with Facebook!', '/auth/facebook') %>
+  <%= link_to('Log in with Google!', '/auth/google_oauth2') %>
 <% end %>
 ```
 
-Now it's time to test it out! It's best to log out of Facebook prior to clicking the login link — that way, you'll see the full login flow.
+Now it's time to test it out! It's best to be logged out of Google prior to clicking the login link — that way, you'll see the full login flow. (You can do this with Incognito Mode if you want to avoid accidentally logging out of things.)
 
 In order to ensure Rails is using https, do the following to start the server instead of our normal `rails s` flow:
 
 `thin start --ssl`
 
-#### A man, a plan, a param, Panama
-Upon clicking the link, your browser sends a `GET` request to the `/auth/facebook` route, which OmniAuth intercepts and redirects to a Facebook login screen with a ridiculously long URI: `https://www.facebook.com/login.php?skip_api_login=1&api_key=247632982388118&signed_next=1&next=https%3A%2F%2Fwww.facebook.com%2Fv2.9%2Fdialog%2Foauth%3Fredirect_uri%3Dhttp%253A%252F%252Flocalhost%253A3000%252Fauth%252Ffacebook%252Fcallback%26state%3Df4033bf06e2c3d74f1e65367e9c1651e2bde5487d5a7ca8d%26scope%3Demail%26response_type%3Dcode%26client_id%3D247632982388118%26ret%3Dlogin%26logger_id%3Dd31c6728-d017-cee3-503d-5fe1bb6d8ad3&cancel_url=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Ffacebook%2Fcallback%3Ferror%3Daccess_denied%26error_code%3D200%26error_description%3DPermissions%2Berror%26error_reason%3Duser_denied%26state%3Df4033bf06e2c3d74f1e65367e9c1651e2bde5487d5a7ca8d%23_%3D_&display=page&locale=en_US&logger_id=d31c6728-d017-cee3-503d-5fe1bb6d8ad3`. The URI has a ton of [encoded](http://ascii.cl/url-encoding.htm) parameters, but we can parse through them to get an idea of what's actually being communicated.
+(Note: there are additional steps required to get SSL set up properly.  Your browser will likely warn you that your connection is "Not Secure", and `thin` will output some `sslv3 alert certificate unknown` error messages.  You can still test out OAuth with these error messages, but then look at [this guide](https://rossta.net/blog/local-ssl-for-rails-5.html).)
 
-Right away, we see our Facebook application key, `api_key=247632982388118`, and the Facebook API endpoint that the login flow will send us to next: `next=https://www.facebook.com/v2.9/dialog/oauth`. At that point, there are divergent paths, one for successful login:
-  + `redirect_uri=https://localhost:3000/auth/facebook/callback` — If login succeeds, we'll be redirected to our server's OmniAuth callback route.
-  + `scope=email` — This tells Facebook that we want to receive the user's registered email address in the login response. We didn't have to configure anything (`scope=email` is the default), but if you want to request other specific pieces of user data check out [the `omniauth-facebook` documentation](https://github.com/mkdynamic/omniauth-facebook#configuring).
-  + `client_id=247632982388118` — There's our application key again, this time provided to the success callback.
-And one for failure:
-  + `cancel_url=https://localhost:3000/auth/facebook/callback` — If login fails, we'll also be redirected to our server's OmniAuth callback route. However, this time there are some nested encoded parameters that provide information about the failure:
-    * `error=access_denied`
-    * `error_code=200`
-    * `error_description=Permissions error`
-    * `error_reason=user_denied`
+#### A man, a plan, a param, Panama
+Upon clicking the link, your browser sends a `GET` request to the `/auth/google_oauth2` route, which OmniAuth intercepts and redirects to a Google login screen with a ridiculously long URI: `https://accounts.google.com/signin/oauth/identifier?client_id=620410601815-118l2lkr76i6aas888d991d8ae9cui3a.apps.googleusercontent.com&as=eaMQCFkgOvTZcNpOZwMufg&destination=https%3A%2F%2Flocalhost%3A3000&approval_state=!ChRDNDl1Z0lTTjRzS2htdkstU1lBeRIfTXhjckRVQlE4SkFZa013TWpqbVNUV1VTN0RrYW94WQ%E2%88%99AJDr988AAAAAXLoO1zvZWoH6UzwOhtA8IWWPbTYK52GB&oauthgdpr=1&xsrfsig=ChkAeAh8T2KGcCgiFRxwfCVH_fxVJfjf4MZAEg5hcHByb3ZhbF9zdGF0ZRILZGVzdGluYXRpb24SBXNvYWN1Eg9vYXV0aHJpc2t5c2NvcGU&flowName=GeneralOAuthFlow`. The URI has a ton of [encoded](http://ascii.cl/url-encoding.htm) parameters, but we can parse through them to get an idea of what's actually being communicated.
+
+Right away, we see our Google application key, `client_id=620410601815-118l2lkr76i6aas888d991d8ae9cui3a.apps.googleusercontent.com`, and `destination=https://localhost:3000` - If login succeeds, we'll be redirected to our own server's OmniAuth callback route.  There are other params based on the particular implementation of [this OmniAuth strategy](https://github.com/zquestz/omniauth-google-oauth2).
 
 #### Inspecting the returned authentication data
-If you want to inspect the exact information that Facebook returns to our application about a logged-in user, throw a `binding.pry` in the `SessionsController#create` method and call `auth` inside the Pry session:
+If you want to inspect the exact information that Google returns to our application about a logged-in user, throw a `byebug` in the `SessionsController#create` method and call `auth` inside the byebug session:
 ```bash
      2: def create
      3:   @user = User.find_or_create_by(uid: auth['uid']) do |u|
@@ -150,33 +143,18 @@ If you want to inspect the exact information that Facebook returns to our applic
      6:     u.image = auth['info']['image']
      7:   end
      8:
- =>  9:   binding.pry
+ =>  9:   byebug
     10:
     11:   session[:user_id] = @user.id
     12:
     13:   render 'welcome/home'
     14: end
 
-[1] pry(#<SessionsController>)> auth
-=> {"provider"=>"facebook",
- "uid"=>"123456789012345",
- "info"=>
-  {"email"=>"mary@poppins.com",
-   "name"=>"Mary Poppins",
-   "image"=>"http://graph.facebook.com/v2.6/123456789012345/picture"},
- "credentials"=>
-  {"token"=>
-    "ABCDaEFbcGHIJKLMNdlOPeQRfSTUVWgXf1hYiZAjBkClDEmFG234n5oH6p7IJqKr0stLMNuOPQRv86S47TUVWX1YZwABCDxyz2EabcdFGeH4IfgJK9hLi0jM1kNOPQlRmn1oSTUp5qr7VWstuXvYZwxAByza807CbD9c3defEFGghijkHIJK",
-   "expires_at"=>1503263133,
-   "expires"=>true},
- "extra"=>
-  {"raw_info"=>
-    {"name"=>"Mary Poppins",
-     "email"=>"mary@poppins.com",
-     "id"=>"123456789012345"}}}
+(byebug) auth
+#<OmniAuth::AuthHash credentials=#<OmniAuth::AuthHash expires=true expires_at=1555613719 refresh_token="1/z4VN8_kjapELFmO3LQVDmJVrO8H606xGNYw_ostcEg8" token="ya29.GlvvBtBasFo0014Z45WEyXeIwCDbtL2eenF8oS-jy7LIhLzo4B2Whz-4RjnAEb5csRnxPX6bGY_JmNOqDav_VsQLx1z3ejvafIkj_-g09yOQCideIBDecvUJOo-w"> extra=#<OmniAuth::AuthHash id_info=#<OmniAuth::AuthHash at_hash="DM4rZQG7wk9kvOFkmjCYbQ" aud="620410601815-118l2lkr76i6aas888d991d8ae9cui3a.apps.googleusercontent.com" azp="620410601815-118l2lkr76i6aas888d991d8ae9cui3a.apps.googleusercontent.com" email="mary.poppins@flatironschool.com" email_verified=true exp=1555613719 family_name="Poppins" given_name="Mary" hd="flatironschool.com" iat=1555610119 iss="https://accounts.google.com" locale="en" name="Mary Poppins" picture="https://lh3.googleusercontent.com/-svkhKaOmEvg/AAAAAAAAAAI/AAAAAAAAAABA/QHXP6WcfaOI/s96-c/photo.jpg" sub="1086249716011815236871"> id_token="eyJhbGciOiJSzI1NiIsImtpZCI6IjM3ODJ2YwYmM4OTAwOGQ5ZDJjMDE3MzBmNzY1Y2ZiMTlkM2I3MGUiLCJ0eXAiOiJKV1QifQ" raw_info=#<OmniAuth::AuthHash email="mary.poppins@flatironschool.com" email_verified=true family_name="Poppins" given_name="Mary" hd="flatironschool.com" locale="en" name="Mary Poppins" picture="https://lh3.googleusercontent.com/-svkhKaOmEvg/AAAAAAAAAAI/AAAAAAAAAABA/QHXP6WcfaOI/photo.jpg" sub="108624971601181526871">> info=#<OmniAuth::AuthHash::InfoHash email="mary.poppins@flatironschool.com" email_verified=true first_name="Mary" image="https://lh3.googleusercontent.com/-svkhKaOmEvg/AAAAAAAAAAI/AAAAAAAAABA/QHXP6WcfaOI/photo.jpg" last_name="Poppins" name="Mary Poppins"> provider="google_oauth2" uid="108624971611181526871">
 ```
 
-When you make a server-side API call (as we did), Facebook will provide an access token that's good for about two months, so you don't have to bug your users very often. That's good!
+When you make a server-side API call (as we did), Google will provide an access token that's good for about two months, so you don't have to bug your users very often. That's good!
 
 ## Conclusion
 Implementing the OAuth protocol yourself is extremely complicated. Using the OmniAuth gem along with any `omniauth-provider` gem(s) streamlines the process, allowing users to log in to your site easily. However, it still trips a lot of people up! Make sure you understand each piece of the flow, what you expect to happen, and any deviation from the expected result. The end result should be gaining access to the user's data from the provider in your `SessionsController`, where you can then decide what to do with it. Typically, if a matching `User` exists in your database, the client will be logged in to your application. If no match is found, a new `User` will be created using the data received from the provider.
