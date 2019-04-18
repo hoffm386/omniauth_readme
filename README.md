@@ -52,9 +52,9 @@ The `ENV` constant refers to a global hash for your entire computer environment.
 
 As you can gather from the initializer code, we're going to need two pieces of information from Google in order to get authentication working: the application key and secret that will identify our app to Google.
 
-Log in to [the Google developer console](https://console.developers.google.com/projectcreate).  Give your new project, like "OmniAuth Practice App", then click `CREATE`.  It will load for a few seconds, then you can select your project from the drop-down in the top menu bar (between "Google APIs" and the search bar).  It should say that you don't have any APIs enabled, which is fine for now because we are just using Google for sign-in, not for Google Maps or Gmail.
+Log in to [the Google developer console](https://console.developers.google.com/projectcreate).  Give your new project a name, like "OmniAuth Practice App", then click `CREATE`.  It will load for a few seconds, then you can select your project from the drop-down in the top menu bar (between "Google APIs" and the search bar).  It should say that you don't have any APIs enabled, which is fine for now because we are just using Google for sign-in, not for Google Maps or Gmail.
 
-Now that you have a project, click on `Credentials` in the menu on the left, then click on `Create credentials` and select `OAuth client ID`.  Choose Application type `Web application`.  You can leave the Name as "Web client 1", then enter `https://localhost:3000/auth/google_oauth2/callback` in the `Authorized redirect URIs` field. (This is a default callback endpoint for the `omniauth-google-oauth2` strategy.)
+Now that you have a project, click on `Credentials` in the menu on the left, then click on `Create credentials` and select `OAuth client ID`.  Choose Application type `Web application`.  You can leave the Name as "Web client 1", then enter `https://localhost:3000/auth/google_oauth2/callback` in the `Authorized redirect URIs` field. (This is a default callback endpoint for the `omniauth-google-oauth2` strategy.) *Make sure you hit Enter after you type this in, or it won't be saved.*
 
 Click `Create`, and a modal will pop up with your client ID and client secret.  Keep the page handy because we'll need those values in a minute, but first...
 
@@ -67,8 +67,8 @@ Instead of setting environment variables directly in our local `ENV` hash, we're
 
 For step three, take the `client ID` and `client secret` values from the Google developer console and paste them into the `.env` file as follows:
 ```
-GOOGLE_KEY=24klr7632982388adlh118.apps.googleusercontent.com
-GOOGLE_SECRET=01ab2345JY67890c123d
+GOOGLE_CLIENT_ID=24klr7632982388adlh118.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=01ab2345JY67890c123d
 ```
 (replacing these dummy keys with your actual credentials)
 
