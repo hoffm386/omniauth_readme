@@ -7,8 +7,6 @@
 
 There are no tests for this lesson, but code along as we learn about OmniAuth and build out a login strategy together!
 
-***NOTE***: If you run into trouble with Facebook, use the usual avenues for assistance (Google, StackOverflow, AAQ, Slack, and so on), but don't bash your head against the wall too much. Facebook is the choice for this lesson because it is ubiquitous as an OAuth provider, but feel free to pick a different provider (GitHub, for instance). A bit of struggle in the setup process is healthy — that's a learning opportunity. However, the ultimate point of this lesson is to learn how to use OmniAuth; not to waste six hours fighting with the Facebook developer interface.
-
 ## Overview
 Passwords are terrible.
 
@@ -36,15 +34,15 @@ Here's how OmniAuth works from the user's standpoint:
 
 Let's see how this works in practice.
 
-## OmniAuth with Facebook
+## OmniAuth with Google
 The OmniAuth gem allows us to use the OAuth protocol with a number of different providers. All we need to do is add the OmniAuth gem *and* the provider-specific OmniAuth gem (e.g., `omniauth-google`) to our Gemfile. In some cases, adding only the provider-specific gem will suffice because it will install the OmniAuth gem as a dependency, but it's safer to add both — the shortcut is far from universal.
 
-In this case, let's add `omniauth` and `omniauth-facebook` to the Gemfile and then run a `bundle install` command. If we were so inclined, we could add additional OmniAuth gems to our heart's content, offering login via multiple providers in our app.
+In this case, let's add `omniauth` and `omniauth-google-oauth2` to the Gemfile and then run a `bundle install` command. If we were so inclined, we could add additional OmniAuth gems to our heart's content, offering login via multiple providers in our app.
 
 Next, we'll need to tell OmniAuth about our app's OAuth credentials. Create a file named `config/initializers/omniauth.rb`. It will contain the following lines:
 ```ruby
 Rails.application.config.middleware.use OmniAuth::Builder do
-  provider :facebook, ENV['FACEBOOK_KEY'], ENV['FACEBOOK_SECRET']
+  provider :google_oauth2, ENV['GOOGLE_CLIENT_ID'], ENV['GOOGLE_CLIENT_SECRET']
 end
 ```
 The code is unfamiliar, but we can guess what's going on from the characteristically clear Rails syntax. We're telling our Rails app to use a piece of middleware created by OmniAuth for the Facebook authentication strategy.
@@ -52,40 +50,27 @@ The code is unfamiliar, but we can guess what's going on from the characteristic
 ### `ENV`
 The `ENV` constant refers to a global hash for your entire computer environment. You can store any key-value pairs in this hash, so it's a very useful place to keep credentials that we don't want to be managed by Git or displayed on GitHub (especially if your GitHub repo is public). The most common error students run into is that when `ENV["PROVIDER_KEY"]` is evaluated in the OmniAuth initializer it returns `nil`. Later attempts to authenticate with the provider will cause some kind of `4xx` error because the provider doesn't recognize the app's credentials (because they're evaluating to `nil`).
 
-As you can gather from the initializer code, we're going to need two pieces of information from Facebook in order to get authentication working: the application key and secret that will identify our app to Facebook.
+As you can gather from the initializer code, we're going to need two pieces of information from Google in order to get authentication working: the application key and secret that will identify our app to Google.
 
-Log in to [the Facebook developer site](https://developers.facebook.com/). In the `My Apps` dropdown menu at the top-right of the page, select `Add New App`, and a modal should appear. Fill out the requested information and click `Create App ID`. Find `PRODUCTS (+)` in the left sidebar. On the `Add a Product` page, click `Set Up` on the `Facebook Login` option.
+Log in to [the Google developer console](https://console.developers.google.com/projectcreate).  Give your new project, like "OmniAuth Practice App", then click `CREATE`.  It will load for a few seconds, then you can select your project from the drop-down in the top menu bar (between "Google APIs" and the search bar).  It should say that you don't have any APIs enabled, which is fine for now because we are just using Google for sign-in, not for Google Maps or Gmail.
 
-Choose the `Web` option, and enter `https://localhost:3000/` when it prompts you for your `Site URL`. Click `Save` (but not `Continue`, and then click on `Settings` under the `Facebook Login` heading in the sidebar:
+Now that you have a project, click on `Credentials` in the menu on the left, then click on `Create credentials` and select `OAuth client ID`.  Choose Application type `Web application`.  You can leave the Name as "Web client 1", then enter `https://localhost:3000/auth/google_oauth2/callback` in the `Authorized redirect URIs` field. (This is a default callback endpoint for the `omniauth-google-oauth2` strategy.)
 
-(NOTE: The urls in the two images below should be prefixed with `https://`)
-
-![Facebook Login Settings](https://user-images.githubusercontent.com/17556281/27403332-0cf83f84-5698-11e7-9e59-acb8ec82a5d2.png)
-
-
-In the `Valid OAuth Redirect URIs` field, enter `https://localhost:3000/auth/facebook/callback`, which is the default callback endpoint for the `omniauth-facebook` strategy:
-
-![Valid OAuth redirect URIs](https://user-images.githubusercontent.com/17556281/27404131-f5aea626-569a-11e7-9f76-df563870d81a.png)
-
-(Note: as of March 2018, Facebook requires `https` uris for redirects. Make sure to prepend your `Valid OAuth Redirect URIs` with `https`.)
-
-Click `Save Changes`, and then click on `Settings` then `Basic` in the sidebar. Keep the page handy because we'll need those `App ID` and `App Secret` values in a minute, but first...
+Click `Create`, and a modal will pop up with your client ID and client secret.  Keep the page handy because we'll need those values in a minute, but first...
 
 ### `dotenv-rails`
 Instead of setting environment variables directly in our local `ENV` hash, we're going to let an awesome gem handle the hard work for us. `dotenv-rails` is one of the best ways to ensure that environment variables are correctly loaded into the `ENV` hash in a secure manner. Using it requires four steps:
   1. Add `dotenv-rails` to your Gemfile and `bundle install`.
   2. Create a file named `.env` at the root of your application (in this case, inside the `omniauth_readme/` directory).
-  3. Add your Facebook app credentials to the newly created `.env` file
+  3. Add your Google app credentials to the newly created `.env` file (see note below)
   4. Add `.env` to your `.gitignore` file to ensure that you don't accidentally commit your precious credentials.
 
-For step three, take the `App ID` and `App Secret` values from the Facebook app dashboard...
-![Facebook App Dashboard](https://user-images.githubusercontent.com/17556281/27404133-f7220c00-569a-11e7-9494-bc3c805b31d0.png)
-
-...and paste them into the `.env` file as follows:
+For step three, take the `client ID` and `client secret` values from the Google developer console and paste them into the `.env` file as follows:
 ```
-FACEBOOK_KEY=247632982388118
-FACEBOOK_SECRET=01ab234567890c123d456ef78babc901
+GOOGLE_KEY=24klr7632982388adlh118.apps.googleusercontent.com
+GOOGLE_SECRET=01ab2345JY67890c123d
 ```
+(replacing these dummy keys with your actual credentials)
 
 ### Routing OAuth flow in your application
 We now need to create a link that will initiate the Facebook OAuth process. The standard OmniAuth path is `/auth/:provider`, so, in this case, we'll need a link to `/auth/facebook`. Let's add one to `app/views/welcome/home.html.erb`:
